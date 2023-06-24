@@ -7,6 +7,7 @@ image = cv2.imread('dna.jpg')
 # Convert the image to grayscale
 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
+
 # Apply Gaussian blur to reduce noise
 blurred = cv2.GaussianBlur(gray, (5, 5), 0)
 
@@ -24,11 +25,11 @@ opened = cv2.morphologyEx(adaptive_threshold, cv2.MORPH_OPEN, kernel, iterations
 closed = cv2.morphologyEx(opened, cv2.MORPH_CLOSE, kernel, iterations=2)
 
 # Dilation to further fill gaps and connect nearby DNA regions
-dilated = cv2.dilate(closed, kernel, iterations=2)  # Increase the iterations
+dilated = cv2.dilate(closed, kernel, iterations=3)  # Increase the iterations
 
 # find contours and filter based on area
-contours, _ = cv2.findContours(closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-filtered_contours = [cnt for cnt in contours if cv2.contourArea(cnt) > 100]  # Adjust the area threshold as needed
+contours, _ = cv2.findContours(dilated, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+filtered_contours = [cnt for cnt in contours if cv2.contourArea(cnt) > 300]  # Adjust the area threshold as needed
 
 # create blank mask image
 mask = np.zeros_like(gray)
@@ -42,8 +43,7 @@ result = cv2.bitwise_and(image, image, mask=mask)
 # bilateral Filtering
 denoised = cv2.bilateralFilter(result, d=9, sigmaColor=75, sigmaSpace=75)
 
-
 # Display
-cv2.imshow('Preprocessed Image', opened)
+cv2.imshow('Preprocessed Image', denoised)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
