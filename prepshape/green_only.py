@@ -1,8 +1,6 @@
 import cv2
 import numpy as np
-
-# Load the image
-image = cv2.imread('dna.jpg')
+from prepshape import *
 
 # Convert the image to the HSV color space
 hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
