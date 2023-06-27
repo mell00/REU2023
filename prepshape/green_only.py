@@ -20,28 +20,3 @@ green_only = cv2.bitwise_and(image, image, mask=mask)
 cv2.imshow('Green Regions Only', green_only)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
-
-# Find the contours of the green regions
-contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-# Assuming there are two green regions bounding the DNA, select the two largest contours
-sorted_contours = sorted(contours, key=cv2.contourArea, reverse=True)
-if len(sorted_contours) < 2:
-    print("Insufficient green regions found.")
-    exit()
-
-# Combine the two largest contours into a single contour
-combined_contour = np.concatenate((sorted_contours[0], sorted_contours[1]))
-
-# Smooth the combined contour using the Douglas-Peucker algorithm
-epsilon = 0.01 * cv2.arcLength(combined_contour, True)
-smoothed_contour = cv2.approxPolyDP(combined_contour, epsilon, True)
-
-# Visualize the smoothed contour on the image
-image_with_contour = image.copy()
-cv2.drawContours(image_with_contour, [smoothed_contour], -1, (0, 255, 0), 2)
-
-# Display the image with the contour
-cv2.imshow('Image with Contour', image_with_contour)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
