@@ -24,26 +24,24 @@ cv2.destroyAllWindows()
 # Find the contours of the green regions
 contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-# Assuming there's only one green region, select the largest contour
-largest_contour = max(contours, key=cv2.contourArea)
+# Assuming there are two green regions bounding the DNA, select the two largest contours
+sorted_contours = sorted(contours, key=cv2.contourArea, reverse=True)
+if len(sorted_contours) < 2:
+    print("Insufficient green regions found.")
+    exit()
 
-# Fit a Bézier curve to the contour points
-x, y = largest_contour[:, 0, 0], largest_contour[:, 0, 1]
-t = np.linspace(0, 1, len(x))
-spl = make_interp_spline(t, np.c_[x, y], k=3)
-curve = spl(np.linspace(0, 1, 100))
+# Combine the two largest contours into a single contour
+combined_contour = np.concatenate((sorted_contours[0], sorted_contours[1]))
 
-# Perform further analysis or computations on the curve
-curve_length = cv2.arcLength(largest_contour, True)
+# Smooth the combined contour using the Douglas-Peucker algorithm
+epsilon = 0.01 * cv2.arcLength(combined_contour, True)
+smoothed_contour = cv2.approxPolyDP(combined_contour, epsilon, True)
 
-# Print the length of the curve
-print("Curve length:", curve_length)
+# Visualize the smoothed contour on the image
+image_with_contour = image.copy()
+cv2.drawContours(image_with_contour, [smoothed_contour], -1, (0, 255, 0), 2)
 
-# Visualize the curve
-image_with_curve = image.copy()
-cv2.polylines(image_with_curve, np.int32([curve]), isClosed=False, color=(0, 255, 0), thickness=2)
-
-# Display the image with the curve
-cv2.imshow('Image with Curve', image_with_curve)
+# Display the image with the contour
+cv2.imshow('Image with Contour', image_with_contour)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
