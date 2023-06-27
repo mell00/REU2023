@@ -13,10 +13,17 @@ upper_green = np.array([80, 255, 255])
 # Threshold the HSV image to get only the green regions
 mask = cv2.inRange(hsv, lower_green, upper_green)
 
-# Apply bitwise AND operation to isolate green regions
-green_only = cv2.bitwise_and(image, image, mask=mask)
+# Invert the mask to get non-green regions
+non_green_mask = cv2.bitwise_not(mask)
 
-# Display the green regions only
-cv2.imshow('Green Regions Only', green_only)
+# Create a white image
+result = np.ones_like(image) * 255
+
+# Copy green regions from the original image to the result
+result[np.where(mask == 255)] = image[np.where(mask == 255)]
+
+
+# Display the result
+cv2.imshow('Green Regions with White Background', result)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
