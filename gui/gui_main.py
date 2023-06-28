@@ -1,5 +1,7 @@
 import tkinter as tk
 from PIL import Image, ImageTk
+import subprocess
+from gui_loadingbar import *
 
 def create_canvas():
     global canvas  # Declare the canvas variable as global
@@ -12,10 +14,13 @@ ico = Image.open('dnaicon.jpg')
 photo = ImageTk.PhotoImage(ico)
 window.wm_iconphoto(False, photo)
 
+def nav_to_loading():
+    subprocess.run(["python", "gui_loadingbar.py"])
+
 def create_buttons():
     window.geometry("450x350")
 
-    button1 = tk.Button(window, text="button1")
+    button1 = tk.Button(window, text="Loading", command=nav_to_loading)
     button1.place(x=25, y=100)
 
     button2 = tk.Button(window, text="button2")

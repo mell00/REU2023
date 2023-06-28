@@ -1,6 +1,10 @@
 import tkinter as tk
 from tkinter import ttk
+from PIL import Image, ImageTk
 import time
+import subprocess
+from gui_main import *
+
 
 def start_loading():
     # Disable the button during loading
@@ -17,7 +21,10 @@ def start_loading():
 
 # Create the main window
 window = tk.Tk()
-window.title("Loading Progress Bar")
+window.title("DNA Image Recognition")
+ico = Image.open('dnaicon.jpg')
+photo = ImageTk.PhotoImage(ico)
+window.wm_iconphoto(False, photo)
 
 # Create a progress bar
 progress_bar = ttk.Progressbar(window, orient="horizontal", length=300, mode="determinate")
