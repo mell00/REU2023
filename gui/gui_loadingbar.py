@@ -3,7 +3,6 @@ from tkinter import ttk
 from PIL import Image, ImageTk
 import time
 import subprocess
-from gui_main import *
 
 
 def start_loading():

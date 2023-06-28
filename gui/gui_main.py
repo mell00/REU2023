@@ -1,7 +1,6 @@
 import tkinter as tk
 from PIL import Image, ImageTk
 import subprocess
-from gui_loadingbar import *
 
 def create_canvas():
     global canvas  # Declare the canvas variable as global
