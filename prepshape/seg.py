@@ -31,11 +31,11 @@ t = np.linspace(0, 1, len(x))
 spl = make_interp_spline(t, np.c_[x, y], k=3)
 curve = spl(np.linspace(0, 1, 100))
 
-# Visualize the DNA curve on the image
-image_with_curve = image.copy()
-cv2.polylines(image_with_curve, np.int32([curve]), isClosed=False, color=(0, 255, 0), thickness=2)
+# Draw the shape traversing through the dark area between the green regions
+image_with_shape = image.copy()
+cv2.polylines(image_with_shape, np.int32([curve]), isClosed=False, color=(0, 0, 255), thickness=2)
 
-# Display the image with the DNA curve
-cv2.imshow('Image with DNA Curve', image_with_curve)
+# Display the image with the shape
+cv2.imshow('Image with Shape', image_with_shape)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
