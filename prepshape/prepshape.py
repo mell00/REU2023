@@ -55,46 +55,48 @@ _, binary = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OT
 contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
 # Set minimum contour area and aspect ratio thresholds
-min_contour_area = 17
-min_aspect_ratio = 0.2
+min_contour_area = 15
+min_aspect_ratio = 0.25
+# Calculate the distance between contours using the centroid of each contour
+def calculate_distance(cnt1, cnt2):
+    M1 = cv2.moments(cnt1)
+    M2 = cv2.moments(cnt2)
+    cx1 = int(M1["m10"] / M1["m00"])
+    cy1 = int(M1["m01"] / M1["m00"])
+    cx2 = int(M2["m10"] / M2["m00"])
+    cy2 = int(M2["m01"] / M2["m00"])
+    distance = np.sqrt((cx2 - cx1) ** 2 + (cy2 - cy1) ** 2)
+    return distance
+
+# Set the threshold distance for connecting contours
+threshold_distance = 45
 
 # Iterate over each contour
-for contour in contours:
+for contour1 in contours:
     # Calculate contour area
-    contour_area = cv2.contourArea(contour)
+    contour_area = cv2.contourArea(contour1)
 
     # Skip contours with small area
     if contour_area < min_contour_area:
         continue
 
-    # Calculate bounding rectangle for the contour
-    x, y, w, h = cv2.boundingRect(contour)
-
-    # Calculate aspect ratio of the bounding rectangle
-    aspect_ratio = float(w) / h
-
-    # Skip contours with low aspect ratio
-    if aspect_ratio < min_aspect_ratio:
-        continue
-
     # Approximate the contour with fewer points
-    epsilon = 0.01 * cv2.arcLength(contour, True)
-    approx = cv2.approxPolyDP(contour, epsilon, True)
+    epsilon = 0.01 * cv2.arcLength(contour1, True)
+    approx = cv2.approxPolyDP(contour1, epsilon, True)
 
-    # Fit a circle to the approximate contour
-    (cx, cy), radius = cv2.minEnclosingCircle(approx)
-    center = (int(cx), int(cy))
-    radius = int(radius)
+    # Iterate over the remaining contours
+    for contour2 in contours:
+        # Skip the same contour or contours with small area
+        if contour2 is contour1 or cv2.contourArea(contour2) < min_contour_area:
+            continue
 
-    # Check if the radius is zero
-    if radius > 0:
-        # Calculate curvature as the inverse of the radius
-        curvature = 1 / radius
+        # Calculate the distance between the contours
+        distance = calculate_distance(approx, contour2)
 
-        # Draw the contour, bounding rectangle, and circle on the image
-        cv2.drawContours(image, [contour], -1, (0, 255, 0), 2)
-        cv2.rectangle(image, (x, y), (x + w, y + h), (0, 0, 255), 2)
-        cv2.circle(image, center, radius, (255, 0, 0), 2)
+        # Connect contours if they are close
+        if distance < threshold_distance:
+            # Draw a line or curve connecting the contours
+            cv2.drawContours(image, [approx, contour2], -1, (0, 255, 0), 2)
 
 # Display the image
 cv2.imshow('DNA Segmentation', image)
