@@ -5,7 +5,7 @@ import subprocess
 def create_canvas():
     global canvas  # Declare the canvas variable as global
     canvas = tk.Canvas(window, width=450, height=500)
-    canvas.pack()
+    canvas.place(x=0, y=0)  # Use place instead of pack
 
 window = tk.Tk()
 window.title("DNA Image Recognition")
@@ -31,10 +31,26 @@ def create_buttons():
 create_canvas()
 
 # Load the image
-front_image = ImageTk.PhotoImage(file="3dmodel.jpg")
+front_image = Image.open("3dmodel.jpg")
+canvas_width = 300
+canvas_height = 300
+
+# Resize the image to fit the canvas while maintaining aspect ratio
+image_ratio = front_image.width / front_image.height
+canvas_ratio = canvas_width / canvas_height
+
+if image_ratio > canvas_ratio:
+    new_width = canvas_width
+    new_height = int(new_width / image_ratio)
+else:
+    new_height = canvas_height
+    new_width = int(new_height * image_ratio)
+
+front_image = front_image.resize((new_width, new_height), Image.ANTIALIAS)
+front_image = ImageTk.PhotoImage(front_image)
 
 # Add the image to the canvas
-canvas.create_image(0, 0, anchor="nw", image=front_image)
+canvas.create_image(canvas_width/2, canvas_height/2, anchor="center", image=front_image)
 
 create_buttons()
 window.mainloop()
