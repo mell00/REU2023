@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from scipy.interpolate import make_interp_spline
+from scipy.interpolate import splprep, splev
 from prepshape import *
 
 # Convert the image to the HSV color space
@@ -16,26 +16,43 @@ mask = cv2.inRange(hsv, lower_green, upper_green)
 # Find the contours of the green regions
 contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-# Assuming there are two green regions bounding the DNA, select the two largest contours
-sorted_contours = sorted(contours, key=cv2.contourArea, reverse=True)
-if len(sorted_contours) < 2:
-    print("Insufficient green regions found.")
-    exit()
+# Assuming there are multiple green regions bounding the DNA, select the largest contours
+num_contours = 10  # Set the desired number of contours
+sorted_contours = sorted(contours, key=cv2.contourArea, reverse=True)[:num_contours]
 
-# Combine the two largest contours into a single contour
-combined_contour = np.concatenate((sorted_contours[0], sorted_contours[1]))
+# Create an empty image to draw the contours
+contour_image = np.zeros_like(image)
 
-# Fit a Bézier curve to the contour points
-x, y = combined_contour[:, 0, 0], combined_contour[:, 0, 1]
-t = np.linspace(0, 1, len(x))
-spl = make_interp_spline(t, np.c_[x, y], k=3)
-curve = spl(np.linspace(0, 1, 100))
+# Draw the contours on the image
+cv2.drawContours(contour_image, sorted_contours, -1, (0, 255, 0), 2)
 
-# Draw the shape traversing through the dark area between the green regions
-image_with_shape = image.copy()
-cv2.polylines(image_with_shape, np.int32([curve]), isClosed=False, color=(0, 0, 255), thickness=2)
+# Extract contour points from the largest contours
+contour_points = []
+for contour in sorted_contours:
+    for point in contour:
+        contour_points.append(point[0])
 
-# Display the image with the shape
-cv2.imshow('Image with Shape', image_with_shape)
+# Convert the contour points to numpy array
+contour_points = np.array(contour_points)
+
+# Extract x and y coordinates from the contour points
+x, y = contour_points[:, 0], contour_points[:, 1]
+
+# Fit a NURBS curve to the contour points
+tck, u = splprep([x, y], s=0, per=1)
+
+# Generate points on the NURBS curve
+u_new = np.linspace(u.min(), u.max(), 100)
+x_new, y_new = splev(u_new, tck)
+
+# Draw the NURBS curve on the contour image
+nurbs_image = contour_image.copy()
+curve_pts = np.column_stack((x_new, y_new)).astype(np.int32)
+cv2.polylines(nurbs_image, [curve_pts], isClosed=False, color=(0, 0, 255), thickness=2)
+
+# Display the original image, contour image, and NURBS image
+cv2.imshow('Original Image', image)
+cv2.imshow('Contour Image', contour_image)
+cv2.imshow('NURBS Image', nurbs_image)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
