@@ -16,13 +16,16 @@ window.wm_iconphoto(False, photo)
 def nav_to_loading():
     subprocess.run(["python", "gui_loadingbar.py"])
 
+def nav_to_uploading():
+    subprocess.run(["python", "uploadgui.py"])
+
 def create_buttons():
     window.geometry("450x350")
 
     button1 = tk.Button(window, text="Loading", command=nav_to_loading)
     button1.place(x=25, y=100)
 
-    button2 = tk.Button(window, text="button2")
+    button2 = tk.Button(window, text="Upload Sample Image", command=nav_to_uploading)
     button2.place(x=100, y=25)
 
     button3 = tk.Button(window, text="button3")
