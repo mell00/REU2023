@@ -2,7 +2,7 @@
 
 # DNA Image Processing 
 
-This program performs segmentation and analyses on DNA electron microscopy images by detecting and fitting a Bézier curve through captured DNA strands. It utilizes OpenCV, numpy, scipy, Pillow, Tkinter, and other custom modules.
+This program performs segmentation and analyses on DNA electron microscopy images by detecting and fitting a NURBS (Non-Uniform Rational B-Spline) curve through captured DNA strands. It utilizes OpenCV, numpy, scipy, Pillow, Tkinter, and other custom modules.
 
 ## Installation
 
