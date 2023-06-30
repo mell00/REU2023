@@ -23,18 +23,3 @@ def create_canvas():
     canvas = tk.Canvas(window, width=450, height=500)
     canvas.place(x=0, y=0)  # Use place instead of pack
 
-# Create the main window
-window = tk.Tk()
-window.title("DNA Image Recognition")
-ico = Image.open('dnaicon.jpg')
-photo = ImageTk.PhotoImage(ico)
-window.wm_iconphoto(False, photo)
-
-create_canvas()
-
-# Create a button to open the file dialog
-upload_button = tk.Button(window, text="Upload Image", command=open_file)
-upload_button.pack(pady=10)
-
-# Start the Tkinter event loop
-window.mainloop()

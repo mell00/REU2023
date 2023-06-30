@@ -1,6 +1,8 @@
 import tkinter as tk
 from PIL import Image, ImageTk
 import subprocess
+from uploadgui import *
+from convert_gui import *
 
 def create_canvas():
     global canvas  # Declare the canvas variable as global
@@ -12,12 +14,10 @@ window.title("DNA Image Recognition")
 ico = Image.open('dnaicon.jpg')
 photo = ImageTk.PhotoImage(ico)
 window.wm_iconphoto(False, photo)
+window.geometry('500x300')
 
 def nav_to_loading():
     subprocess.run(["python", "gui_loadingbar.py"])
-
-def nav_to_uploading():
-    subprocess.run(["python", "uploadgui.py"])
 
 def create_buttons():
     window.geometry("450x350")
@@ -25,10 +25,10 @@ def create_buttons():
     button1 = tk.Button(window, text="Loading", command=nav_to_loading)
     button1.place(x=25, y=100)
 
-    button2 = tk.Button(window, text="Upload Sample Image", command=nav_to_uploading)
+    button2 = tk.Button(window, text="Upload Sample Image", command=open_file)
     button2.place(x=100, y=25)
 
-    button3 = tk.Button(window, text="button3")
+    button3 = tk.Button(window, text="Convert Image(s)", command=select_directory_and_convert)
     button3.place(x=175, y=100)
 
 create_canvas()
