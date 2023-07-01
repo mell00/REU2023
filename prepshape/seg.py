@@ -1,7 +1,8 @@
-import cv2
+'''import cv2
 import numpy as np
 from scipy.interpolate import splprep, splev
 from prepshape import *
+
 
 # Convert the image to the HSV color space
 hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
@@ -55,4 +56,52 @@ cv2.imshow('Original Image', image)
 cv2.imshow('Contour Image', contour_image)
 cv2.imshow('NURBS Image', nurbs_image)
 cv2.waitKey(0)
-cv2.destroyAllWindows()
+cv2.destroyAllWindows()'''
+
+import cv2
+import numpy as np
+from scipy.interpolate import splprep, splev
+from prepshape import *
+from overlap import *
+
+def get_green_regions(image):
+    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    lower_green = np.array([40, 50, 50])
+    upper_green = np.array([80, 255, 255])
+    mask = cv2.inRange(hsv, lower_green, upper_green)
+    return mask
+
+def draw_largest_contours(image, mask, min_contour_area):
+    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    large_contours = [cnt for cnt in contours if cv2.contourArea(cnt) > min_contour_area]
+    if not large_contours:
+        raise ValueError("No large contours found")
+    contour_image = cv2.drawContours(image.copy(), large_contours, -1, (0, 255, 0), 2)
+    return contour_image, large_contours
+
+def fit_curve_to_contours(large_contours):
+    points = np.vstack(contour.squeeze() for contour in large_contours)
+    x, y = points[:, 0], points[:, 1]
+    tck, u = splprep([x, y], s=0, per=1)
+    u_new = np.linspace(u.min(), u.max(), 1000)
+    x_new, y_new = splev(u_new, tck)
+    return np.column_stack((x_new, y_new)).astype(np.int32)
+
+def main():
+    min_contour_area = 500  # Set your minimum contour area
+    mask = get_green_regions(image)
+    contour_image, large_contours = draw_largest_contours(image, mask, min_contour_area)
+    curve_points = fit_curve_to_contours(large_contours)
+    intersections = detect_intersections(curve_points)
+    nurbs_image = cv2.polylines(contour_image.copy(), [curve_points], isClosed=False, color=(0, 0, 255), thickness=2)
+    marked_image = mark_intersections(nurbs_image, intersections)
+    cv2.imshow('Original Image', image)
+    cv2.imshow('Contour Image', contour_image)
+    cv2.imshow('NURBS Image', marked_image)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+if __name__ == '__main__':
+    main()
+
+
