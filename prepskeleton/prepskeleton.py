@@ -3,6 +3,7 @@ from skimage.util import invert
 from skimage.util import img_as_ubyte
 import cv2
 import numpy as np
+import os
 from data import *
 
 min_size = 10
