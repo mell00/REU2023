@@ -1,4 +1,24 @@
-'''https://gist.github.com/jamjar919/05a76cf21035cef3cc86ac1979588d6d#file-skeletonintersection-py'''
+
+
+import numpy as np
+from data import *
+from prepskeleton import *
+from skimage.morphology import skeletonize
+from skimage.util import invert
+from skimage.util import img_as_ubyte
+from scipy.ndimage import convolve
+from skan.csr import skeleton_to_csgraph
+from skan import Skeleton, summarize
+from skan import draw
+
+
+
+def find_neighbours(x, y, image):
+    """Return 8-neighbours of image point P1(x,y), in a counter-clockwise order"""
+    img = image
+    x1, y1, x_1, y_1 = x+1, y+1, x-1, y-1
+    return [ img[x_1][y], img[x_1][y1], img[x][y1], img[x1][y1], 
+             img[x1][y], img[x1][y_1], img[x][y_1], img[x_1][y_1] ]
 
 def getSkeletonIntersection(skeleton):
     """ Given a skeletonised image, it will give the coordinates of the intersections of the skeleton.
@@ -9,39 +29,22 @@ def getSkeletonIntersection(skeleton):
     Returns: 
     List of 2-tuples (x,y) containing the intersection coordinates
     """
-    # A biiiiiig list of valid intersections             2 3 4
-    # These are in the format shown to the right         1 C 5
-    #                                                    8 7 6 
-    validIntersection = [[0,1,0,1,0,0,1,0],[0,0,1,0,1,0,0,1],[1,0,0,1,0,1,0,0],
-                         [0,1,0,0,1,0,1,0],[0,0,1,0,0,1,0,1],[1,0,0,1,0,0,1,0],
-                         [0,1,0,0,1,0,0,1],[1,0,1,0,0,1,0,0],[0,1,0,0,0,1,0,1],
-                         [0,1,0,1,0,0,0,1],[0,1,0,1,0,1,0,0],[0,0,0,1,0,1,0,1],
-                         [1,0,1,0,0,0,1,0],[1,0,1,0,1,0,0,0],[0,0,1,0,1,0,1,0],
-                         [1,0,0,0,1,0,1,0],[1,0,0,1,1,1,0,0],[0,0,1,0,0,1,1,1],
-                         [1,1,0,0,1,0,0,1],[0,1,1,1,0,0,1,0],[1,0,1,1,0,0,1,0],
-                         [1,0,1,0,0,1,1,0],[1,0,1,1,0,1,1,0],[0,1,1,0,1,0,1,1],
-                         [1,1,0,1,1,0,1,0],[1,1,0,0,1,0,1,0],[0,1,1,0,1,0,1,0],
-                         [0,0,1,0,1,0,1,1],[1,0,0,1,1,0,1,0],[1,0,1,0,1,1,0,1],
-                         [1,0,1,0,1,1,0,0],[1,0,1,0,1,0,0,1],[0,1,0,0,1,0,1,1],
-                         [0,1,1,0,1,0,0,1],[1,1,0,1,0,0,1,0],[0,1,0,1,1,0,1,0],
-                         [0,0,1,0,1,1,0,1],[1,0,1,0,0,1,0,1],[1,0,0,1,0,1,1,0],
-                         [1,0,1,1,0,1,0,0]];
-    image = skeleton.copy();
-    image = image/255;
-    intersections = list();
-    for x in range(1,len(image)-1):
-        for y in range(1,len(image[x])-1):
+    # Create a copy of the skeleton
+    image = skeleton.copy()
+    # Normalize the image
+    image = image / 255
+
+    intersections = list()
+    
+    # Traverse the image
+    for x in range(1, image.shape[0] - 1):
+        for y in range(1, image.shape[1] - 1):
             # If we have a white pixel
             if image[x][y] == 1:
-                neighbours = zs.neighbours(x,y,image);
-                valid = True;
-                if neighbours in validIntersection:
-                    intersections.append((y,x));
-    # Filter intersections to make sure we don't count them twice or ones that are very close together
-    for point1 in intersections:
-        for point2 in intersections:
-            if (((point1[0] - point2[0])**2 + (point1[1] - point2[1])**2) < 10**2) and (point1 != point2):
-                intersections.remove(point2);
-    # Remove duplicates
-    intersections = list(set(intersections));
-    return intersections;
+                # Get the neighbours
+                neighbours = find_neighbours(x, y, image)
+                # If the pixel is an intersection
+                if sum(neighbours) > 2:
+                    intersections.append((y, x))
+
+    return intersections
