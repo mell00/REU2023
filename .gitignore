@@ -155,7 +155,6 @@ cython_debug/
 # Picture folder
 pictures/
 
-gui/
 pngtoico.py
 
 # PyCharm
