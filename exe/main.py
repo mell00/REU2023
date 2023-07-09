@@ -1,5 +1,13 @@
+import subprocess
+import os
+
+def gui_start():
+    os.chdir("../gui")
+    subprocess.run(["python", "gui_main.py"])
+
+
 def main():
-    #stuff goes here:
+    gui_start()
     
     return 0
 
