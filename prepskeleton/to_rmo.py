@@ -1,5 +1,6 @@
 import numpy as np
 from skimage import io, measure
+from prepskeleton import *
 
 def get_3d_coordinates(image_stack):
     """
