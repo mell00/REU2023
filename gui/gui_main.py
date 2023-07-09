@@ -6,15 +6,55 @@ from convert_gui import *
 
 def create_canvas():
     global canvas  # Declare the canvas variable as global
-    canvas = tk.Canvas(window, width=450, height=500)
-    canvas.place(x=0, y=0)  # Use place instead of pack
+    canvas = tk.Canvas(window)
+    canvas.pack(fill="both", expand=True)  # Use pack with fill and expand to fill the window
+
+def resize_image(event=None):
+    global front_image, canvas, image_canvas
+
+    # Get the current canvas size
+    canvas_width = canvas.winfo_width()
+    canvas_height = canvas.winfo_height()
+
+    # Check if canvas dimensions are non-zero
+    if canvas_width > 0 and canvas_height > 0:
+        # Calculate the maximum size to fit within the canvas
+        max_width = canvas_width
+        max_height = canvas_height
+
+        # Get the original image dimensions
+        original_width = front_image.width
+        original_height = front_image.height
+
+        # Calculate the scaling factor
+        width_ratio = max_width / original_width
+        height_ratio = max_height / original_height
+
+        # Choose the smaller ratio as the scaling factor
+        scaling_factor = min(width_ratio, height_ratio)
+
+        # Calculate the new dimensions
+        new_width = int(original_width * scaling_factor)
+        new_height = int(original_height * scaling_factor)
+
+        # Resize the image
+        front_image_resized = front_image.resize((new_width, new_height), Image.LANCZOS)  # Use LANCZOS instead of ANTIALIAS
+
+        # Add the resized image to the canvas
+        image_tk = ImageTk.PhotoImage(front_image_resized)
+        canvas.itemconfig(image_canvas, image=image_tk)
+        canvas.image = image_tk  # Save a reference to prevent image garbage collection
 
 window = tk.Tk()
 window.title("DNA Image Recognition")
-ico = Image.open('dnaicon.jpg')
+ico = Image.open('dnaicon.ico')
 photo = ImageTk.PhotoImage(ico)
 window.wm_iconphoto(False, photo)
 window.geometry('500x300')
+
+# Set the minimum and maximum size for the window
+window.minsize(682, 383)  # Set the minimum width and height
+window.maxsize(683, 384)  # Set the maximum width and height
 
 def nav_to_loading():
     subprocess.run(["python", "gui_loadingbar.py"])
@@ -23,37 +63,26 @@ def create_buttons():
     window.geometry("450x350")
 
     button1 = tk.Button(window, text="Loading", command=nav_to_loading)
-    button1.place(x=25, y=100)
+    button1.place(x=341, y=192)
 
     button2 = tk.Button(window, text="Upload Sample Image", command=open_file)
-    button2.place(x=100, y=25)
+    button2.place(x=341, y=267)
 
     button3 = tk.Button(window, text="Convert Image(s)", command=select_directory_and_convert)
-    button3.place(x=175, y=100)
+    button3.place(x=500, y=267)
 
 create_canvas()
 
 # Load the image
-front_image = Image.open("3dmodel.jpg")
-canvas_width = 300
-canvas_height = 300
+front_image = Image.open("DNAVision.png")
 
-# Resize the image to fit the canvas while maintaining aspect ratio
-image_ratio = front_image.width / front_image.height
-canvas_ratio = canvas_width / canvas_height
+# Bind the event handler to the canvas resize event
+canvas.bind("<Configure>", resize_image)
 
-if image_ratio > canvas_ratio:
-    new_width = canvas_width
-    new_height = int(new_width / image_ratio)
-else:
-    new_height = canvas_height
-    new_width = int(new_height * image_ratio)
-
-front_image = front_image.resize((new_width, new_height), Image.ANTIALIAS)
-front_image = ImageTk.PhotoImage(front_image)
-
-# Add the image to the canvas
-canvas.create_image(canvas_width/2, canvas_height/2, anchor="center", image=front_image)
+# Add the original image to the canvas
+image_tk = ImageTk.PhotoImage(front_image)
+image_canvas = canvas.create_image(0, 0, anchor="nw", image=image_tk)
 
 create_buttons()
 window.mainloop()
+
