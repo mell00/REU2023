@@ -29,6 +29,9 @@ cv2.imshow('Filled Image', filled_image)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
 
+#Identify and erase blobs
+
+
 
 # Skeletonize the binary image
 skeleton = skeletonize(filled_image / 255)
