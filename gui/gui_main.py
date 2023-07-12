@@ -3,6 +3,7 @@ from PIL import Image, ImageTk
 import subprocess
 from uploadgui import *
 from convert_gui import *
+from pagemanager import PageManager
 
 
 class KnotVision(tk.Tk):
@@ -23,10 +24,9 @@ class KnotVision(tk.Tk):
         self.switch_frame(MainPage)
 
     def switch_frame(self, target_frame):
-        new_frame = target_frame(self)
         if self.frame is not None:
             self.frame.destroy()
-        self.frame = new_frame
+        self.frame = target_frame(self)
         self.frame.pack(fill="both", expand=True)
 
 
@@ -60,18 +60,21 @@ class MainPage(tk.Frame):
             self.canvas.itemconfig(self.image_canvas, image=self.image_tk)
 
     def create_buttons(self):
-        button1 = tk.Button(self, text="Run", height=2, width=5, command=self.nav_to_loading)
+        button1 = tk.Button(self, text="Run", height=2, width=5, command=self.nav_to_settings)
         button1.place(relx=0.9, rely=0.6, anchor="center")
 
-        button2 = tk.Button(self, text="Quit", height=2, width=5, command=open_file)
+        button2 = tk.Button(self, text="Quit", height=2, width=5, command=self.quit)
         button2.place(relx=0.7, rely=0.8, anchor="center")
 
-        button3 = tk.Button(self, text="Help", height=2, width=5, command=select_directory_and_convert)
+        button3 = tk.Button(self, text="Help", height=2, width=5, command=open_file)
         button3.place(relx=0.9, rely=0.8, anchor="center")
 
 
-    def nav_to_loading(self):
-        subprocess.run(["python", "gui_loadingbar.py"])
+    def nav_to_settings(self):
+        self.master.switch_frame(MainPage)  # Switch back to the main page of the application
+
+    def quit(self):
+        self.master.quit()
 
 
 class RunPage(tk.Frame):
