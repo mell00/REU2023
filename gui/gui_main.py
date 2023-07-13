@@ -4,6 +4,7 @@ import subprocess
 from uploadgui import *
 from convert_gui import *
 from pagemanager import PageManager
+from gui_settings import Settings
 
 
 class KnotVision(tk.Tk):
@@ -71,7 +72,7 @@ class MainPage(tk.Frame):
 
 
     def nav_to_settings(self):
-        self.master.switch_frame(MainPage)  # Switch back to the main page of the application
+        self.master.switch_frame(Settings)  # Switch back to the main page of the application
 
     def quit(self):
         self.master.quit()
