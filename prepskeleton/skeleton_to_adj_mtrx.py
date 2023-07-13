@@ -1,11 +1,18 @@
+import cv2
 import numpy as np
+from scipy.sparse import csr_matrix
+from scipy.sparse.csgraph import connected_components
 from skimage.morphology import skeletonize
 from skimage.util import invert
 from skimage.transform import resize
+from prepskeleton import *
 
 def standardize_image_size(image, target_size):
+    # Normalize the image to [0, 1] range before resizing
+    normalized_image = cv2.normalize(image, None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
+    
     # Resize the image to the target size
-    resized_image = resize(image, target_size, mode='constant')
+    resized_image = resize(normalized_image, target_size, mode='constant')
 
     # Threshold the resized image to obtain a binary skeleton
     threshold = resized_image.mean()
@@ -16,48 +23,45 @@ def standardize_image_size(image, target_size):
 
     return skeleton
 
-def skeleton_to_adjacency_matrix(skeleton, buffer_size=1):
+def skeleton_to_adjacency_matrix(skele):
     # Invert the skeleton image
-    skeleton = invert(skeleton)
+    inverted_image = invert(skele)
 
-    # Get the coordinates of the skeleton pixels
-    rows, cols = np.nonzero(skeleton)
+    # Resize the inverted image to match the size of the skeleton image
+    resized_image = resize(inverted_image, skele.shape, mode='constant')
 
-    # Determine the size of the adjacency matrix with buffer
-    num_pixels = len(rows)
-    matrix_size = num_pixels + 2 * buffer_size
+    # Threshold the resized image to obtain a binary image
+    threshold = resized_image.mean()
+    binary_image = resized_image > threshold
 
-    # Initialize an empty adjacency matrix
-    adjacency_matrix = np.zeros((matrix_size, matrix_size), dtype=int)
+    # Find connected components in the binary image
+    num_labels, labels = connected_components(binary_image, connectivity=2)
 
-    # Iterate over the skeleton pixels
-    for i in range(num_pixels):
-        x1, y1 = cols[i], rows[i]
+    # Create an empty adjacency matrix
+    adjacency_matrix = csr_matrix((num_labels, num_labels), dtype=np.int8)
 
-        # Check the neighbors of the current pixel
-        for j in range(i + 1, num_pixels):
-            x2, y2 = cols[j], rows[j]
+    # Iterate over each pixel in the skeleton image
+    height, width = skele.shape
+    for y in range(height):
+        for x in range(width):
+            if skele[y, x]:
+                # Check the neighboring pixels
+                for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                    nx, ny = x + dx, y + dy
+                    if 0 <= nx < width and 0 <= ny < height and skele[ny, nx]:
+                        # Add an edge between the current pixel and the neighboring pixel
+                        adjacency_matrix[labels[y, x], labels[ny, nx]] = 1
 
-            # Calculate the Euclidean distance between the pixels
-            distance = np.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+    all_zeros = not adjacency_matrix.nnz
 
-            # If the distance is below a threshold, consider the pixels as connected
-            if distance <= 1.5:
-                adjacency_matrix[i + buffer_size, j + buffer_size] = 1
-                adjacency_matrix[j + buffer_size, i + buffer_size] = 1
+    return adjacency_matrix, all_zeros
 
-    return adjacency_matrix
+    # Print the adjacency matrix
 
-# Example usage
-skeleton_image = np.array([[0, 0, 0, 0, 0],
-                           [0, 1, 1, 1, 0],
-                           [0, 0, 1, 0, 0],
-                           [0, 1, 1, 1, 0],
-                           [0, 0, 0, 0, 0]])
+    standardized_image = standardize_image_size(skeleton) 
 
-# Standardize the size of the skeleton image to (50, 50)
-target_size = (50, 50)
-standardized_image = standardize_image_size(skeleton_image, target_size)
+    adjacency_matrix, is_zeros = skeleton_to_adjacency_matrix(standardized_image)
 
-adjacency_matrix = skeleton_to_adjacency_matrix(standardized_image, buffer_size=1)
-print(adjacency_matrix)
+    print(adjacency_matrix)
+
+    print(all_zeros)
