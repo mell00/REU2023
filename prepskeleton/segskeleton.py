@@ -33,12 +33,9 @@ def main():
     skeleton_mask = skeleton
     contour_image, large_contours = draw_largest_contours(image, skeleton_mask, min_contour_area)
     curve_points = fit_curve_to_contours(large_contours)
-    #intersections = detect_intersections(curve_points)
     nurbs_image = cv2.polylines(contour_image.copy(), [curve_points], isClosed=False, color=(0, 0, 255), thickness=2)
-    #marked_image = mark_intersections(nurbs_image, intersections)
     cv2.imshow('Original Image', image)
     cv2.imshow('Contour Image', contour_image)
-    #cv2.imshow('NURBS Image', marked_image)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
