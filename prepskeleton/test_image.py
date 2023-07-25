@@ -53,7 +53,7 @@ import matplotlib.pyplot as plt
 img = cv2.imread('grid3_dna_5700.jpg', 0)
 
 # Set filter strength (10 is a good starting point)
-filter_strength = 300
+filter_strength = 3000
 
 # Apply Non-Local Means Denoising
 filtered_img = cv2.fastNlMeansDenoising(img, None, filter_strength, 7, 21)
@@ -62,20 +62,32 @@ filtered_img = cv2.fastNlMeansDenoising(img, None, filter_strength, 7, 21)
 clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
 clahe_img = clahe.apply(filtered_img)
 
-# Apply morphological operations to enhance the creases
-#kernel = np.ones((5,5), np.uint8)
-#morph_img = cv2.morphologyEx(clahe_img, cv2.MORPH_OPEN, kernel)
+#Apply morphological operations to enhance the creases
+kernel = np.ones((10,10), np.uint8)
+morph_img = cv2.morphologyEx(clahe_img, cv2.MORPH_OPEN, kernel)
 
-# Apply thresholding to make the background lighter using Otsu's Binarization
-#_, thresh_img = cv2.threshold(morph_img, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+# Perform binary thresholding to create a mask of the lines
+_, mask = cv2.threshold(morph_img, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+# Invert the mask
+mask_inv = cv2.bitwise_not(mask)
+
+# Create an image of the desired background color
+background_color = 255
+background = np.full_like(img, background_color)
+
+# Apply the inverted mask to the background image
+img_lines_on_background = np.where(mask_inv == 255, img, background)
 
 # Display the original, denoised, CLAHE, Morphed and Thresholded images for comparison
 plt.figure(figsize=(24,6))
-plt.subplot(151), plt.imshow(img, cmap='gray'), plt.title('Original')
-plt.subplot(152), plt.imshow(filtered_img, cmap='gray'), plt.title('Denoised')
-plt.subplot(153), plt.imshow(clahe_img, cmap='gray'), plt.title('CLAHE Enhanced')
+#plt.subplot(151), plt.imshow(img, cmap='gray'), plt.title('Original')
+#plt.subplot(152), plt.imshow(filtered_img, cmap='gray'), plt.title('Denoised')
+plt.subplot(151), plt.imshow(clahe_img, cmap='gray'), plt.title('CLAHE Enhanced')
 #plt.subplot(154), plt.imshow(morph_img, cmap='gray'), plt.title('Morphology Enhanced')
-#plt.subplot(155), plt.imshow(thresh_img, cmap='gray'), plt.title('Thresholded')
+plt.subplot(152), plt.imshow(mask, cmap='gray'), plt.title('Mask')
+plt.subplot(153), plt.imshow(img_lines_on_background, cmap='gray'), plt.title('Lines on Background')
 plt.show()
 
 
